@@ -14,6 +14,7 @@ const User = g
 
     linkedInUrl: g.url().optional(),
 
+    //@ts-ignore
     projects: g
       .relation(() => Project)
       .list()

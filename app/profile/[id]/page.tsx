@@ -10,7 +10,7 @@ type Props = {
 };
 
 const UserProfile = async ({ params }: Props) => {
-  const result = (await getUserProjects(params.id, 100)) as {
+  const result = (await getUserProjects(params.id, "" + 100)) as {
     user: UserProfile;
   };
   //if there is no result in that case simply return message
@@ -19,9 +19,7 @@ const UserProfile = async ({ params }: Props) => {
   }
 
   //if we have a result (user) then return profile page
-  return <ProfilePage
-  user={result?.user}
-  />
+  return <ProfilePage user={result?.user} />;
 };
 
 export default UserProfile;

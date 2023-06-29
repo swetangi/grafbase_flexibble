@@ -1,58 +1,61 @@
 import { g, auth, config } from "@grafbase/sdk";
+//@ts-ignore
+const User = g
+  .model("User", {
+    name: g.string().length({ min: 2, max: 20 }),
 
-// Welcome to Grafbase!
-// Define your data models, integrate auth, permission rules, custom resolvers, search, and more with Grafbase.
-// Integrate Auth
-// https://grafbase.com/docs/auth
-//
-// const authProvider = auth.OpenIDConnect({
-//   issuer: process.env.ISSUER_URL ?? ''
-// })
-//
-// Define Data Models
-// https://grafbase.com/docs/database
+    email: g.email().unique(),
 
-const User = g.model("User", {
-  name: g.string().length({ min: 2, max: 20 }),
+    avatarUrl: g.url(),
 
-  email: g.email().unique(),
+    description: g.string().length({ min: 2, max: 100 }).optional(),
 
-  avatarUrl: g.url(),
+    githubUrl: g.string().optional(),
 
-  description: g.string(),
+    linkedInUrl: g.url().optional(),
 
-  githubUrl: g.string(),
+    projects: g
+      .relation(() => Project)
+      .list()
+      .optional(),
 
-  linkedInUrl: g.url(),
+    // Extend models with resolvers
+    // https://grafbase.com/docs/edge-gateway/resolvers
+    // gravatar: g.url().resolver('user/gravatar')
+  })
+  .auth((rules) => {
+    rules.public().read();
+  });
 
-  projects: g
-    .relation(() => Project)
-    .list()
-    .optional(),
+//@ts-ignore
+const Project = g
+  .model("Project", {
+    title: g.string().length({ min: 3 }),
+    description: g.string(),
+    image: g.url(),
+    liveSiteUrl: g.url(),
+    githubUrl: g.url(),
+    category: g.string().search(),
+    createdBy: g.relation(() => User),
+  })
+  .auth((rules) => {
+    rules.public().read();
+    rules.private().create().delete().update();
+  });
 
-  // Extend models with resolvers
-  // https://grafbase.com/docs/edge-gateway/resolvers
-  // gravatar: g.url().resolver('user/gravatar')
-});
-
-const Project = g.model("Project", {
-  title: g.string().length({ min: 3 }),
-  description: g.string(),
-  image: g.url(),
-  liveSiteUrl: g.url(),
-  githubUrl: g.url(),
-  category: g.string().search(),
-  createdBy: g.relation(() => User),
+const jwt = auth.JWT({
+  issuer: "grafbase",
+  secret: g.env("NEXTAUTH_SECRET"),
 });
 
 export default config({
   schema: g,
   // Integrate Auth
   // https://grafbase.com/docs/auth
-  // auth: {
-  //   providers: [authProvider],
-  //   rules: (rules) => {
-  //     rules.private()
-  //   }
-  // }
+  auth: {
+    providers: [jwt],
+    rules: (rules) => {
+      rules.private();
+    },
+  },
 });
